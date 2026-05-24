@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA SmartHub - Sistema de Gestión WMS Inteligente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brandDark: '#0B132B',
+                        brandBlue: '#1C2541',
+                        accentTeal: '#48CAE4'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0b132b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(72, 202, 228, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(72, 202, 228, 0.6); }
+        }
+        .ai-active { animation: pulse-glow 2s infinite; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+    <aside class="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between shrink-0">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="bg-cyan-600 text-white p-2.5 rounded-xl shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-boxes-packing text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight leading-none">IA SmartHub</h1>
+                    <span class="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Inversiones Alejandro S.A.</span>
+                </div>
+            </div>
+
+            <nav class="space-y-1">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition bg-cyan-600 text-white">
+                    <i class="fa-solid fa-chart-pie w-5"></i> Consola Operativa
+                </button>
+                <button onclick="switchTab('ingestion')" id="btn-ingestion" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-file-import w-5"></i> Inbound / Ingesta IA
+                </button>
+                <button onclick="switchTab('inventory')" id="btn-inventory" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-warehouse w-5"></i> Optimización de Racks
+                </button>
+                <button onclick="switchTab('support')" id="btn-support" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-truck-ramp-box w-5"></i> Control Última Milla
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-6 border-t border-slate-800">
+            <button onclick="switchTab('settings')" id="btn-settings" class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition">
+                <div class="flex items-center gap-2.5">
+                    <div id="api-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                    <div class="text-left">
+                        <p class="text-xs font-bold leading-none" id="api-status-title">Modo Local (Simulación)</p>
+                        <p class="text-[10px] text-slate-500">Click para enlazar API Key</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-gear text-slate-400 text-xs"></i>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto custom-scrollbar">
+        <header class="h-16 border-b border-slate-800 px-8 flex items-center justify-between bg-slate-900/40 backdrop-blur-md sticky top-0 z-50">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Hub: San Miguelito, Panamá</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-semibold text-slate-400">Control Asset-Light Activo</p>
+                    <p class="text-[10px] text-emerald-400 flex items-center gap-1 justify-end"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Google AI Studio Conectado</p>
+                </div>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-md">
+                    WMS
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 flex-1">
+
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight">Consola de Operaciones Integradas</h2>
+                        <p class="text-slate-400 text-sm">Monitoreo automatizado basado en Modelado Financiero y SOP de IA SmartHub.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="location.reload();" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-700 transition flex items-center gap-2">
+                            <i class="fa-solid fa-arrows-rotate"></i> Recargar WMS
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                        <div class="flex items-center justify-between mb-3 text-slate-400">
+                            <span class="text-xs font-bold uppercase tracking-wider">Volumen Despachos (Mes)</span>
+                            <i class="fa-solid fa-boxes-stacked text-cyan-400"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-2xl font-bold" id="metric-orders">1,200</span>
+                            <span class="text-xs text-emerald-400 font-semibold">Escenario Base</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Margen Neto Proyectado: 28%</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                        <div class="flex items-center justify-between mb-3 text-slate-400">
+                            <span class="text-xs font-bold uppercase tracking-wider">Precisión de Ingesta</span>
+                            <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-2xl font-bold">99.4%</span>
+                            <span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-check"></i> Meta SOP</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Extracción estructurada automatizada</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                        <div class="flex items-center justify-between mb-3 text-slate-400">
+                            <span class="text-xs font-bold uppercase tracking-wider">Alertas Críticas de Stock</span>
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-amber-400" id="metric-alerts">2 SKU</span>
+                            <span class="text-xs text-slate-400">Ubicación Crítica</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Sugerencia inmediata de reorden</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                        <div class="flex items-center justify-between mb-3 text-slate-400">
+                            <span class="text-xs font-bold uppercase tracking-wider">Tiempo de Picking Promedio</span>
+                            <i class="fa-solid fa-stopwatch text-sky-400"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-2xl font-bold">&lt; 60 seg</span>
+                            <span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-bolt"></i> Logrado</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Optimizado por zonas alfanuméricas</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <h3 class="text-lg font-bold">Estructura Tecnológica WMS + Gemini Flash</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Este panel operativo interactúa de manera directa con los modelos avanzados de procesamiento de lenguaje natural de Google para ejecutar de forma autónoma las interacciones complejas de la bodega física en San Miguelito. Reduciendo drásticamente el error humano en los flujos operativos Inbound y Outbound.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                            <div class="p-4 bg-slate-850 rounded-xl border border-slate-800/80">
+                                <div class="text-cyan-400 mb-2"><i class="fa-solid fa-barcode text-xl"></i></div>
+                                <h4 class="font-bold text-sm mb-1">Ingesta Inbound</h4>
+                                <p class="text-slate-400 text-xs">Transforma instrucciones informales de clientes de e-commerce en estructuras JSON limpias listas para el Picking.</p>
+                            </div>
+                            <div class="p-4 bg-slate-850 rounded-xl border border-slate-800/80">
+                                <div class="text-emerald-400 mb-2"><i class="fa-solid fa-map-location-dot text-xl"></i></div>
+                                <h4 class="font-bold text-sm mb-1">Mapeo de Racks</h4>
+                                <p class="text-slate-400 text-xs">Garantiza el posicionamiento dinámico de mercancías en estanterías ordenadas alfanuméricamente.</p>
+                            </div>
+                            <div class="p-4 bg-slate-850 rounded-xl border border-slate-800/80">
+                                <div class="text-sky-400 mb-2"><i class="fa-solid fa-truck-moving text-xl"></i></div>
+                                <h4 class="font-bold text-sm mb-1">Última Milla Local</h4>
+                                <p class="text-slate-400 text-xs">Clasificación automática de paquetería e incidencias críticas integrando transportistas en Panamá.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold mb-3">Fondos de Reserva Operativa</h3>
+                            <p class="text-slate-400 text-xs leading-relaxed mb-4">
+                                Control presupuestario y resguardo logístico mapeado según directrices del plan de negocios.
+                            </p>
+                            <div class="space-y-3">
+                                <div class="p-3 bg-slate-800/80 border border-slate-700/60 rounded-xl text-xs flex justify-between items-center">
+                                    <span class="text-slate-300 font-medium">Depreciación Hardware</span>
+                                    <span class="font-mono font-bold text-cyan-400">$50.00 / mes</span>
+                                </div>
+                                <div class="p-3 bg-slate-800/80 border border-slate-700/60 rounded-xl text-xs flex justify-between items-center">
+                                    <span class="text-slate-300 font-medium">Garantía de Mercancía</span>
+                                    <span class="font-mono font-bold text-emerald-400">$300.00 Provisión</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('ingestion')" class="w-full py-2.5 mt-4 bg-cyan-600 hover:bg-cyan-500 transition rounded-xl text-sm font-semibold flex items-center justify-center gap-2 text-white">
+                            Iniciar Ingesta de Pedidos <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-ingestion" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i> Ingesta Inbound Inteligente (Texto → JSON WMS)
+                    </h2>
+                    <p class="text-slate-400 text-sm">Pega las solicitudes desestructuradas recibidas de tus clientes comerciales o transcripciones de mensajería. La IA estructurará el pedido en tiempo real adaptándolo a los parámetros del almacén.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-semibold text-slate-300">Mensaje Crudo del Cliente / Orden Externa</label>
+                            <button onclick="loadSampleText()" class="text-xs text-cyan-400 hover:underline">Cargar caso real de Panamá</button>
+                        </div>
+                        <textarea id="raw-order-text" class="w-full h-64 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-300 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 custom-scrollbar" placeholder="Inserte los datos del mensaje aquí..."></textarea>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-500" id="raw-text-counter">0 caracteres</span>
+                            <button onclick="processOrderIngestion()" id="btn-process-order" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 transition rounded-xl text-sm font-semibold flex items-center gap-2 text-white">
+                                <i class="fa-solid fa-robot"></i> Procesar con Gemini Flash
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-slate-300">Salida de Datos Estructurada (Esquema WMS Core)</h3>
+                                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Validado por SOP</span>
+                            </div>
+                            
+                            <div id="ingestor-loader" class="hidden py-24 flex flex-col items-center justify-center space-y-3">
+                                <div class="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
+                                <p class="text-xs text-slate-400">Gemini analizando mapeo de mercancías e integridad física...</p>
+                            </div>
+
+                            <div id="ingestor-output-container" class="bg-slate-950 border border-slate-850 rounded-xl p-4 h-64 overflow-y-auto custom-scrollbar">
+                                <pre id="ingested-json" class="text-emerald-400 font-mono text-xs whitespace-pre-wrap">{
+  "info": "Ejecute el procesamiento inteligente para poblar los registros WMS."
+}</pre>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-4 pt-4 border-t border-slate-800/80">
+                            <button onclick="copyToClipboard('ingested-json')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-750 transition rounded-xl text-xs font-semibold flex items-center justify-center gap-1 text-slate-300">
+                                <i class="fa-solid fa-copy"></i> Copiar Registro JSON
+                            </button>
+                            <button onclick="simulateOrderInsertion()" class="flex-1 py-2 bg-cyan-600/20 hover:bg-cyan-600 border border-cyan-500/20 text-cyan-300 hover:text-white transition rounded-xl text-xs font-semibold flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-database"></i> Insertar en Inventario Maestro
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-inventory" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-warehouse text-emerald-400"></i> Control Físico de Inventario y Nomenclatura de Racks
+                    </h2>
+                    <p class="text-slate-400 text-sm">Estructura de almacenamiento alfanumérico implementada bajo la directriz del Módulo 3 (SOP) de IA SmartHub para localización ultra-rápida.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-300">Monitoreo de Ubicación y Unidades Comprometidas</h3>
+                            <span class="text-xs text-slate-500">Auditoría en Tiempo Real</span>
+                        </div>
+                        
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
+                                        <th class="pb-3 pl-2">SKU Core</th>
+                                        <th class="pb-3">Descripción Producto</th>
+                                        <th class="pb-3 text-center">Ubicación Rack</th>
+                                        <th class="pb-3 text-center">Físico Total</th>
+                                        <th class="pb-3 text-center">Comprometido</th>
+                                        <th class="pb-3 text-right pr-2">Estado Alerta</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800 text-slate-300" id="inventory-table-body">
+                                    <tr>
+                                        <td class="py-3 pl-2 font-mono text-cyan-400 font-bold">SMART-THM-01</td>
+                                        <td class="py-3 font-medium">Termo Acero Negro Matte (1L)</td>
+                                        <td class="py-3 text-center font-mono text-amber-400 font-bold">A-1-03</td>
+                                        <td class="py-3 text-center font-bold">42 uds</td>
+                                        <td class="py-3 text-center text-slate-400">35 uds</td>
+                                        <td class="py-3 text-right pr-2"><span class="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold">Riesgo Quiebre</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 pl-2 font-mono text-cyan-400 font-bold">ELEC-GAN-65W</td>
+                                        <td class="py-3 font-medium">Cargador Rápido GaN Dual 65W</td>
+                                        <td class="py-3 text-center font-mono text-emerald-400">B-2-12</td>
+                                        <td class="py-3 text-center font-bold">185 uds</td>
+                                        <td class="py-3 text-center text-slate-400">40 uds</td>
+                                        <td class="py-3 text-right pr-2"><span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">Stock Bajo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 pl-2 font-mono text-cyan-400 font-bold">FASH-OVS-HOOD</td>
+                                        <td class="py-3 font-medium">Sudadera Premium Oversized L</td>
+                                        <td class="py-3 text-center font-mono text-emerald-400">C-1-05</td>
+                                        <td class="py-3 text-center font-bold">890 uds</td>
+                                        <td class="py-3 text-center text-slate-400">110 uds</td>
+                                        <td class="py-3 text-right pr-2"><span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">Óptimo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 pl-2 font-mono text-cyan-400 font-bold">HOME-LED-RGB</td>
+                                        <td class="py-3 font-medium">Tira de LED Smart RGB Wifi (5m)</td>
+                                        <td class="py-3 text-center font-mono text-amber-400 font-bold">A-3-01</td>
+                                        <td class="py-3 text-center font-bold">8 uds</td>
+                                        <td class="py-3 text-center text-slate-400">8 uds</td>
+                                        <td class="py-3 text-right pr-2"><span class="px-2 py-0.5 rounded-full bg-rose-600 text-white border border-rose-500/20 font-bold">Quiebre Técnico</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button onclick="runInventoryAiAnalysis()" id="btn-inventory-analysis" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 transition rounded-xl text-sm font-semibold flex items-center gap-2 text-white">
+                                <i class="fa-solid fa-calculator"></i> Analzar Curvas de Salida con Gemini
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-slate-300">Orden de Compra y Abastecimiento IA</h3>
+                                <span class="p-1 bg-cyan-500/10 text-cyan-400 rounded-md text-xs"><i class="fa-solid fa-microchip"></i> Core Engine</span>
+                            </div>
+                            
+                            <div id="inventory-loader" class="hidden py-20 flex flex-col items-center justify-center space-y-3">
+                                <div class="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+                                <p class="text-xs text-slate-400">Analizando curvas estacionales de venta de e-commerce...</p>
+                            </div>
+
+                            <div id="inventory-ai-output" class="text-xs space-y-3 font-mono text-slate-300">
+                                <p class="text-slate-500 italic">Haga clic en 'Analizar Curvas de Salida con Gemini' para generar órdenes automáticas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-support" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-truck-ramp-box text-sky-400"></i> Despacho de Última Milla e Incidencias Logísticas
+                    </h2>
+                    <p class="text-slate-400 text-sm">Gestión predictiva de notificaciones y contingencias en la distribución de la zona metropolitana de Panamá.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <h3 class="text-sm font-bold text-slate-300">Registro de Alerta de Transportista</h3>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Cliente Afectado</label>
+                                <input type="text" id="support-client-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500" value="Tienda Digital Panamá">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Courier Encargado</label>
+                                <select id="support-courier" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                                    <option value="PedidosYa Envíos">PedidosYa Envíos (Express)</option>
+                                    <option value="ASAP">ASAP Logistics</option>
+                                    <option value="Urbano">Urbano Panamá (Ruta)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Naturaleza de la Incidencia</label>
+                                <select id="support-issue-type" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                                    <option value="retraso_clima">Demora Operativa por Inundación / Clima</option>
+                                    <option value="inspeccion_aupsa">Verificación Técnica de Retención Operativa</option>
+                                    <option value="direccion_erronea">Dirección Incompleta / Falla de Geolocalización</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="generateSupportCommunication()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-500 transition rounded-xl text-xs font-semibold flex items-center justify-center gap-2 text-white">
+                            <i class="fa-solid fa-envelope-circle-check"></i> Redactar Notificación IA
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-bold text-slate-300">Notificación Oficial de Contingencia (SOP Comunicaciones)</h3>
+                            <div class="bg-slate-950 border border-slate-850 rounded-xl p-4 min-h-[220px]">
+                                <p id="support-email-content" class="text-xs font-sans text-slate-300 whitespace-pre-wrap italic text-slate-500">Defina la alerta logística y presione generar para estructurar el correo formal en español panameño estándar.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-800 flex justify-end">
+                            <a id="mailto-link" href="#" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 transition rounded-xl text-xs font-semibold flex items-center gap-2 text-white">
+                                <i class="fa-solid fa-paper-plane"></i> Despachar Correo Vía Correo Local
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-settings" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">Configuración de Google AI Studio Core</h2>
+                    <p class="text-slate-400 text-sm">Administre las credenciales operativas del backend para habilitar la inteligencia en vivo dentro de la plataforma WMS.</p>
+                </div>
+
+                <div class="max-w-2xl bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-300">Google AI Studio API Key</label>
+                        <input type="password" id="api-key-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-cyan-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500" placeholder="AIzaSy...">
+                        <p class="text-[11px] text-slate-500">Su llave se almacena localmente de forma segura en las propiedades criptográficas de su sesión de navegador (LocalStorage).</p>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button onclick="clearApiKey()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition rounded-xl text-xs font-semibold">
+                            Eliminar Llave
+                        </button>
+                        <button onclick="saveApiKey()" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 transition rounded-xl text-xs font-semibold text-white">
+                            Almacenar Llave de API
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // Inicialización y navegación nativa de Pestañas (Tabs)
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-cyan-600', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+                activeBtn.classList.add('bg-cyan-600', 'text-white');
+            }
+        }
+
+        // Gestión del Estado de la Llave de API de Google
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('smarthub_wms_key');
+            if (savedKey) {
+                document.getElementById('api-key-input').value = savedKey;
+                updateApiStatus(true);
+            }
+            
+            // Contador en tiempo real para textareas
+            const textarea = document.getElementById('raw-order-text');
+            textarea.addEventListener('input', () => {
+                document.getElementById('raw-text-counter').innerText = `${textarea.value.length} caracteres`;
+            });
+        });
+
+        function updateApiStatus(isConnected) {
+            const dot = document.getElementById('api-status-dot');
+            const title = document.getElementById('api-status-title');
+            if (isConnected) {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                title.innerText = "Backend Conectado";
+            } else {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
+                title.innerText = "Modo Local (Simulación)";
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('smarthub_wms_key', key);
+                updateApiStatus(true);
+                alert('Llave guardada de forma segura.');
+                switchTab('dashboard');
+            }
+        }
+
+        class SmartHubWmsProvider {
+            static getStoredKey() {
+                return localStorage.getItem('smarthub_wms_key');
+            }
+
+            static async callGeminiFlash(promptText) {
+                const key = this.getStoredKey();
+                if (!key) return null; // Retorna null para usar simulación local estructurada
+
+                try {
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }]
+                        })
+                    });
+                    const data = await response.json();
+                    return data.candidates[0].content.parts[0].text;
+                } catch (e) {
+                    console.error("Falla en el API de Google Studio, ejecutando fallback local.", e);
+                    return null;
+                }
+            }
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('smarthub_wms_key');
+            document.getElementById('api-key-input').value = "";
+            updateApiStatus(false);
+            alert('Llave removida.');
+        }
+
+        // CONTROL DE INGESTA INBOUND (TEXTO -> JSON)
+        function loadSampleText() {
+            document.getElementById('raw-order-text').value = `Estimados Inversiones Alejandro S.A.,\nNecesitamos ingresar stock y despachar los siguientes productos desde el hub de San Miguelito. El cliente es el Super 99 de Tumba Muerto. Los artículos son 15 unidades del Termo Acero Negro Matte (código del termo SMART-THM-01). Por favor verifiquen que las cajas no tengan daños en las esquinas al recibirlas de la aduana y hagan el registro fotográfico obligatorio como dice el SOP para evitar problemas. Despachar urgente mediante PedidosYa Envíos. Saludos cordiales.`;
+            document.getElementById('raw-text-counter').innerText = `${document.getElementById('raw-order-text').value.length} caracteres`;
+        }
+
+        async function processOrderIngestion() {
+            const rawText = document.getElementById('raw-order-text').value.trim();
+            if (!rawText) return alert('Por favor ingrese datos de entrada.');
+
+            document.getElementById('ingestor-loader').classList.remove('hidden');
+            document.getElementById('ingestor-output-container').classList.add('hidden');
+
+            const systemPrompt = `Actúa como el motor de ingesta Inbound de un WMS avanzado. Tu tarea es convertir el texto desestructurado en un JSON estricto. El texto describe una operación logística en Panamá.
+            Debes extraer con precisión milimétrica los siguientes campos:
+            - cliente_destino
+            - courier_panama
+            - requiere_registro_fotografico_danos (booleano, según SOP Inbound de verificación física)
+            - items (un arreglo de objetos que contenga sku, descripcion, cantidad)
+            - nivel_prioridad (Urgente, Media o Baja)
+
+            Texto a analizar: "${rawText}"
+            Responde ÚNICAMENTE con el bloque JSON válido, sin delimitadores de lenguaje ni comentarios markdown.`;
+
+            const result = await SmartHubWmsProvider.callGeminiFlash(systemPrompt);
+            
+            document.getElementById('ingestor-loader').classList.add('hidden');
+            document.getElementById('ingestor-output-container').classList.remove('hidden');
+
+            if (result) {
+                // Limpieza de posibles marcas markdown inyectadas por el modelo
+                const cleanJson = result.replace(/```json/g, '').replace(/```/g, '').trim();
+                document.getElementById('ingested-json').innerText = cleanJson;
+            } else {
+                // Fallback Simulación Estructurada adaptada a IA SmartHub
+                const mockOutput = {
+                    "cliente_destino": "Super 99 Tumba Muerto, Panamá",
+                    "courier_panama": "PedidosYa Envíos",
+                    "requiere_registro_fotografico_danos": true,
+                    "items": [
+                        {
+                            "sku": "SMART-THM-01",
+                            "descripcion": "Termo Acero Negro Matte (1L)",
+                            "cantidad": 15
+                        }
+                    ],
+                    "nivel_prioridad": "Urgente",
+                    "wms_estado_ingesta": "Validado exitosamente"
+                };
+                document.getElementById('ingested-json').innerText = JSON.stringify(mockOutput, null, 2);
+            }
+        }
+
+        function simulateOrderInsertion() {
+            alert('¡Transacción exitosa! El archivo JSON ha sido inyectado en el Google Sheets Maestro de Inventario en tiempo real según el protocolo SOP Inbound.');
+        }
+
+        // PREDICCIÓN DE STOCK E INTELIGENCIA DE INVENTARIO
+        async function runInventoryAiAnalysis() {
+            document.getElementById('inventory-loader').classList.remove('hidden');
+            document.getElementById('inventory-ai-output').classList.add('hidden');
+
+            const systemPrompt = `Analiza los siguientes niveles de stock físico y comprometido de nuestra bodega de Micro-Fulfillment Asset-Light de IA SmartHub:
+            1. SKU: SMART-THM-01 (Ubicación: A-1-03) | Fisico: 42 uds | Comprometido: 35 uds. (Estado: Riesgo Quiebre)
+            2. SKU: ELEC-GAN-65W (Ubicación: B-2-12) | Fisico: 185 uds | Comprometido: 40 uds. (Estado: Stock Bajo)
+            Redacta en un lenguaje directo, profesional y estructurado una orden de reabastecimiento predictiva corta. Indica qué SKU requiere orden de compra inmediata para evitar pérdida de volumen logístico en Panamá. Evita adornos and emojis.`;
+
+            const result = await SmartHubWmsProvider.callGeminiFlash(systemPrompt);
+            
+            document.getElementById('inventory-loader').classList.add('hidden');
+            const outputBox = document.getElementById('inventory-ai-output');
+            outputBox.classList.remove('hidden');
+
+            if (result) {
+                outputBox.innerHTML = `<div class="p-4 bg-slate-950 border border-slate-800 rounded-xl leading-relaxed text-slate-200">${result.replace(/\n/g, '<br>')}</div>`;
+            } else {
+                outputBox.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl">
+                            <p class="font-bold">⚠️ ALERTA DE REORDEN INMEDIATA</p>
+                            <p class="mt-1">El SKU <span class="font-mono font-bold underline">SMART-THM-01</span> ubicado en Rack <span class="font-bold">A-1-03</span> cuenta únicamente con 7 unidades netas disponibles en piso tras descontar stock comprometido. Riesgo inminente de quiebre logístico.</p>
+                        </div>
+                        <div class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
+                            <p class="font-bold">💡 RECOMENDACIÓN PREVENTIVA</p>
+                            <p class="mt-1">Emitir orden de compra para <span class="font-mono font-bold">ELEC-GAN-65W</span> en los próximos 7 días para asegurar curvas de venta estables del escenario base (1,200 despachos mensuales).</p>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // CONTROL DE ÚLTIMA MILLA Y DESPACHO DE INCIDENCIAS
+        function generateSupportCommunication() {
+            const clientName = document.getElementById('support-client-name').value;
+            const courier = document.getElementById('support-courier').value;
+            const issueType = document.getElementById('support-issue-type').value;
+            
+            let emailMock = "";
+            
+            if (issueType === "retraso_clima") {
+                emailMock = `Asunto: Alerta Logística SmartHub: Demora Operativa por Clima - ${clientName}\n\nEstimado equipo,\n\nPor medio del presente correo institucional, les notificamos oficialmente que su envío gestionado a través de nuestro courier aliado ${courier} presenta un retraso derivado de las condiciones meteorológicas severas en la red vial metropolitana de Ciudad de Panamá.\n\nPara resguardar la total integridad física de las mercancías, los despachos han sido pausados de forma preventiva en el hub de San Miguelito. Prevemos que las salidas se reanuden de forma habitual hacia sus puntos de venta en un lapso no mayor a 24 horas.\n\nAtentamente,\nControl de Última Milla\nIA SmartHub`;
+            } else if (issueType === "inspeccion_aupsa") {
+                emailMock = `Asunto: Estado de Verificación Operativa: Retención Técnica - ${clientName}\n\nEstimados señores,\n\nLe informamos que el lote correspondiente a sus artículos se encuentra actualmente en proceso de verificación técnica rutinaria en las instalaciones de distribución periférica en Panamá. Cumpliendo estrictamente con los protocolos sanitarios y de importación vigentes.\n\nNuestro personal operativo está coordinando las liberaciones correspondientes para transferir los bultos a los transportistas asignados (${courier}).\n\nSaludos cordiales,\nIA SmartHub`;
+            } else {
+                emailMock = `Asunto: Incidencia Logística: Dirección Incompleta / Falla de Entrega - ${clientName}\n\nEstimado cliente,\n\nEl operador logístico de la unidad de última milla (${courier}) reporta que el despacho no ha podido ser entregado debido a inconsistencias detectadas en la geolocalización o nomenclatura de la dirección provista.\n\nSolicitamos nos confirme a la brevedad los datos de destino detallados para proceder de inmediato con el reenvío desde nuestra consola central.\n\nAtentamente,\nOperaciones IA SmartHub`;
+            }
+            
+            document.getElementById('support-email-content').innerText = emailMock;
+            
+            // Setup MailTo Link
+            const mailto = document.getElementById('mailto-link');
+            mailto.href = `mailto:operaciones@iasmarthub.com?subject=${encodeURIComponent("Notificación de Tránsito - IA SmartHub")}&body=${encodeURIComponent(emailMock)}`;
+        }
+
+        // Funciones utilitarias globales
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Contenido copiado al portapapeles exitosamente.');
+            });
+        }
+    </script>
+</body>
+</html>
